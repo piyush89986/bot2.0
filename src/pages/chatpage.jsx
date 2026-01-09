@@ -13,6 +13,7 @@ export default function ChatPage() {
     const menuRef = useRef(null);
 
     const { chats } = useSelector(store => store.chatState);
+    const { loggedUser } = useSelector(store => store.user)
 
     const logOut = useCallback(() => {
         window.localStorage.clear();
@@ -101,15 +102,15 @@ export default function ChatPage() {
 
                 {/* Users list */}
                 <div className="flex-1 overflow-y-auto">
-                    {chats.map((chat, index) => {
-                        let user = chat.members[1];
+                    {chats.map((chat) => {
+                        let user = chat.members.filter(item => item._id !== loggedUser._id)[0];
                         return (
                             <NavLink
                                 to={`/c/chat/${chat._id}`}
-                                key={index}
+                                key={chat._id}
                                 state={{
                                     name: chat.isGroupChat ? chat.groupName : user.user_name,
-                                    icon : chat.isGroupChat ? chat.groupIcon : user.avatar
+                                    icon: chat.isGroupChat ? chat.groupIcon : user.avatar
                                 }}
                                 className={({ isActive }) =>
                                     `flex items-center p-3 cursor-pointer transition-all duration-200 

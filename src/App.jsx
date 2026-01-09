@@ -12,6 +12,7 @@ import Chatsection from './components/chatsection'
 import UserProfile from './pages/profilepage'
 import UserSettings from './pages/setting'
 import NewChatPage from './pages/newChatPage'
+import { ToastContainer } from 'react-toastify'
 
 function App() {
 
@@ -37,6 +38,7 @@ function App() {
 
         <Route path='login' element={<Auth />} />
       </Routes>
+      <ToastContainer />
     </>
   )
 }

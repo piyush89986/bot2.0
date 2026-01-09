@@ -6,6 +6,7 @@ import { useLocation, useNavigate, useParams } from "react-router";
 import { getMyChatMessages, sendMessageApi } from "../webservices/chatApi/apis";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
+import { socket } from "../webservices/webSocket/socket";
 
 export default function Chatsection() {
     // Ref for auto-scroll
@@ -45,7 +46,6 @@ export default function Chatsection() {
 
             if (response.success) {
                 setNewMsg("");
-                setMessages(prev => [...prev, response.data]);
             } else {
                 toast.error(response.message);
             }
@@ -79,6 +79,20 @@ export default function Chatsection() {
     useEffect(() => {
         fetchChatMessages()
     }, [fetchChatMessages]);
+
+
+    useEffect(() => {
+        socket.emit("chatroom", chatId);
+    }, [chatId]);
+
+
+    // receive message from realtime
+
+    useEffect(() => {
+        socket.on("newMessage", (messages) => {
+            setMessages(prev => [...prev, messages])
+        })
+    }, [])
 
 
     return (
@@ -119,9 +133,9 @@ export default function Chatsection() {
                             }`}
                     >
                         <div
-                            className={`p-2 rounded-lg max-w-lg ${msg.sender._id === loggedUser
+                            className={`px-2 py-0 rounded max-w-lg ${msg.sender._id === loggedUser._id
                                 ? "bg-green-400 text-white"
-                                : "bg-white border"
+                                : "bg-gray-200"
                                 }`}
                         >
                             <p className="whitespace-pre-wrap break-words">

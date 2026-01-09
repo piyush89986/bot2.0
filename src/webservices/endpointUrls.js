@@ -3,6 +3,8 @@ export default {
     SIGNUP_USER: "/auth/register",
     ME: "/users/me",
     SEARCH_USERS: "/users/search",
+    UPDATE_USER : "/users",
+    UPLOAD_USER_PROFILE : "/users/upload-avatar",
     // chat urls
     GET_MY_CHATS: "/chat",
     GET_CHAT_MESSAGES: "/chat/m/", // chat id

@@ -81,7 +81,7 @@ export default async function apiRequestHandler(
     } catch (error) {
         return {
             success: false,
-            status: error.response?.status || 500,
+            status: error.response?.success || 500,
             message:
                 error.response?.data?.message ||
                 error.message ||

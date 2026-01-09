@@ -1,8 +1,10 @@
-/* eslint-disable jsx-a11y/img-redundant-alt */
-import React, { useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { IoReturnUpBack } from "react-icons/io5";
-import { useSelector } from "react-redux";
+import { RxCross2 } from "react-icons/rx";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
+import { updateUser, uploadProfile } from "../webservices/auth/api";
+import { toast } from "react-toastify";
 
 // UserProfile.jsx
 // Single-file React component styled with Tailwind CSS.
@@ -13,23 +15,43 @@ import { useNavigate } from "react-router";
 // - Responsive layout ready to drop into your chat app
 // - Placeholder save handlers where you can call your API
 
-export default function UserProfile({ user = {} }) {
+export default function UserProfile() {
 
     const { loggedUser } = useSelector(store => store.user);
+    const dispatch = useDispatch()
 
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
-        user_name: loggedUser.user_name || "",
-        gender: loggedUser.gender || "",
-        email: loggedUser.email || "",
-        bio: loggedUser.bio || "",
-        phone: loggedUser.phone || "",
-        address: loggedUser.address || "",
+        user_name: "",
+        gender: "",
+        email: "",
+        bio: "",
+        address: "",
     });
 
-    const [avatarFile, setAvatarFile] = useState(null);
-    const [avatarPreview, setAvatarPreview] = useState(loggedUser.avatar || "");
+    useEffect(() => {
+        if (!loggedUser) return;
+
+        setForm({
+            user_name: loggedUser.user_name,
+            gender: loggedUser.gender,
+            email: loggedUser.email,
+            bio: loggedUser.bio,
+            address: loggedUser.address,
+        });
+
+        return () => {
+            setForm({
+                user_name: "",
+                gender: "",
+                email: "",
+                bio: "",
+                address: "",
+            });
+        }
+    }, [loggedUser])
+
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState(null);
 
@@ -38,14 +60,12 @@ export default function UserProfile({ user = {} }) {
     const [pwd, setPwd] = useState({ current: "", new: "", confirm: "" });
     const [pwdError, setPwdError] = useState("");
 
-    const fileInputRef = useRef(null);
-
     function handleChange(e) {
         const { name, value } = e.target;
         setForm((s) => ({ ...s, [name]: value }));
     }
 
-    function handleAvatarChange(e) {
+    async function handleAvatarChange(e) {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
         // Basic client-side validation
@@ -57,16 +77,25 @@ export default function UserProfile({ user = {} }) {
             setMessage({ type: "error", text: "Image too large. Max 5MB." });
             return;
         }
-        setAvatarFile(file);
-        const reader = new FileReader();
-        reader.onload = () => setAvatarPreview(reader.result);
-        reader.readAsDataURL(file);
+
+        const payload = new FormData();
+        payload.append("avatar", file);
+
+        try {
+            let response = await uploadProfile(payload);
+            if (response.success) {
+                dispatch({ type: "userSlice/SET_USER", payload: response.data })
+                toast.success(response.message)
+            } else {
+                toast.error(response.message)
+            }
+        } catch (error) {
+            toast.error(error.message || "Server Error")
+        }
     }
 
     function removeAvatar() {
-        setAvatarFile(null);
-        setAvatarPreview("");
-        if (fileInputRef.current) fileInputRef.current.value = null;
+
     }
 
     async function handleSave(e) {
@@ -75,25 +104,17 @@ export default function UserProfile({ user = {} }) {
         setMessage(null);
 
         try {
-            // Example: construct FormData if you need to upload avatar
-            const payload = new FormData();
-            payload.append("user_name", form.user_name);
-            payload.append("gender", form.gender);
-            payload.append("bio", form.bio);
-            payload.append("phone", form.phone);
-            payload.append("address", form.address);
-            if (avatarFile) payload.append("avatar", avatarFile);
-
-            // TODO: replace URL with your API endpoint
-            // const res = await fetch('/api/user/profile', { method: 'POST', body: payload });
-            // const data = await res.json();
-
-            // Mock delay + success
-            await new Promise((r) => setTimeout(r, 700));
-            setMessage({ type: "success", text: "Profile saved successfully." });
+            let response = await updateUser(form);
+            if (response.success) {
+                dispatch({ type: "userSlice/SET_USER", payload: response.data })
+                toast.success(response.message)
+                setMessage({ type: "success", text: "Profile saved successfully." });
+            } else {
+                setMessage({ type: "error", text: "Failed to save profile. Try again." });
+                toast.error(response.message)
+            }
         } catch (err) {
             console.error(err);
-            setMessage({ type: "error", text: "Failed to save profile. Try again." });
         } finally {
             setSaving(false);
         }
@@ -146,20 +167,23 @@ export default function UserProfile({ user = {} }) {
                 <div className="bg-white rounded-2xl p-6">
                     {message && (
                         <div
-                            className={`mb-4 p-3 rounded-md text-sm ${message.type === "error" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
+                            className={`mb-4 flex justify-between items-center p-3 rounded-md text-sm ${message.type === "error" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
                                 }`}
                             role="status"
                         >
                             {message.text}
+                            <span className="cursor-pointer" onClick={() => setMessage(null)}>
+                                <RxCross2 />
+                            </span>
                         </div>
                     )}
 
-                    <form onSubmit={handleSave} className="space-y-6">
+                    {loggedUser && <form onSubmit={handleSave} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
                             <div className="flex flex-col items-center md:items-start">
                                 <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                                    {avatarPreview ? (
-                                        <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
+                                    {loggedUser && loggedUser.avatar ? (
+                                        <img src={loggedUser.avatar} alt="Avatar preview" className="w-full h-full object-cover" />
                                     ) : (
                                         <span className="text-gray-400">No photo</span>
                                     )}
@@ -168,7 +192,6 @@ export default function UserProfile({ user = {} }) {
                                 <div className="mt-3 flex items-center gap-2">
                                     <label className="cursor-pointer inline-flex items-center px-3 py-1 border rounded-md text-sm select-none">
                                         <input
-                                            ref={fileInputRef}
                                             type="file"
                                             accept="image/*"
                                             onChange={handleAvatarChange}
@@ -190,7 +213,7 @@ export default function UserProfile({ user = {} }) {
                                         <label className="block text-sm font-medium text-gray-700">Full name</label>
                                         <input
                                             name="user_name"
-                                            value={form.user_name}
+                                            defaultValue={form.user_name}
                                             onChange={handleChange}
                                             className="mt-1 px-2 py-2 block w-full rounded border border-gray-200 focus:outline-blue-500"
                                             placeholder="Your full name"
@@ -206,9 +229,9 @@ export default function UserProfile({ user = {} }) {
                                             className="mt-1 px-2 py-2 block w-full rounded border border-gray-200 focus:outline-blue-500"
                                         >
                                             <option value="">-Select-</option>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                            <option value="other">Other</option>
+                                            <option value="male">male</option>
+                                            <option value="female">female</option>
+                                            <option value="other">other</option>
                                         </select>
                                     </div>
 
@@ -216,9 +239,7 @@ export default function UserProfile({ user = {} }) {
                                         <label className="block text-sm font-medium text-gray-700">Email</label>
                                         <input
                                             name="email"
-                                            value={form.email}
-                                            readOnly
-                                            disabled
+                                            defaultValue={form.email}
                                             className="mt-1 px-2 py-2 block w-full rounded border border-gray-200 focus:outline-blue-500"
                                         />
                                     </div>
@@ -227,10 +248,9 @@ export default function UserProfile({ user = {} }) {
                                         <label className="block text-sm font-medium text-gray-700">Phone</label>
                                         <input
                                             name="phone"
-                                            value={form.phone}
-                                            onChange={handleChange}
+                                            defaultValue={loggedUser.phone}
                                             className="mt-1 px-2 py-2 block w-full rounded border border-gray-200 focus:outline-blue-500"
-                                            placeholder="+91 98765 43210"
+                                            readOnly
                                         />
                                     </div>
 
@@ -238,7 +258,7 @@ export default function UserProfile({ user = {} }) {
                                         <label className="block text-sm font-medium text-gray-700">Bio</label>
                                         <textarea
                                             name="bio"
-                                            value={form.bio}
+                                            defaultValue={form.bio}
                                             onChange={handleChange}
                                             rows={3}
                                             className="mt-1 px-2 py-2 block w-full rounded border border-gray-200 focus:outline-blue-500"
@@ -249,8 +269,8 @@ export default function UserProfile({ user = {} }) {
                                     <div className="md:col-span-2">
                                         <label className="block text-sm font-medium text-gray-700">Address</label>
                                         <input
-                                            name="location"
-                                            value={form.address}
+                                            name="address"
+                                            defaultValue={form.address}
                                             onChange={handleChange}
                                             className="mt-1 px-2 py-2 block w-full rounded border border-gray-200 focus:outline-blue-500"
                                             placeholder="City, Country"
@@ -332,16 +352,12 @@ export default function UserProfile({ user = {} }) {
                                 onClick={() => {
                                     // reset to initial user data
                                     setForm({
-                                        fullName: user.fullName || "",
-                                        username: user.username || "",
-                                        email: user.email || "",
-                                        bio: user.bio || "",
-                                        phone: user.phone || "",
-                                        location: user.location || "",
+                                        user_name: loggedUser.fullName || "",
+                                        gender: loggedUser.gender || "",
+                                        email: loggedUser.email || "",
+                                        bio: loggedUser.bio || "",
+                                        address: loggedUser.address || "",
                                     });
-                                    setAvatarPreview(user.avatarUrl || "");
-                                    setAvatarFile(null);
-                                    if (fileInputRef.current) fileInputRef.current.value = null;
                                     setMessage(null);
                                 }}
                                 className="px-4 py-2 rounded-lg border text-sm cursor-pointer"
@@ -352,7 +368,7 @@ export default function UserProfile({ user = {} }) {
                                 {saving ? "Saving..." : "Save changes"}
                             </button>
                         </div>
-                    </form>
+                    </form>}
                 </div>
             </div>
         </>
