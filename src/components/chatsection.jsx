@@ -87,7 +87,6 @@ export default function Chatsection() {
 
 
     // receive message from realtime
-
     useEffect(() => {
         socket.on("newMessage", (messages) => {
             setMessages(prev => [...prev, messages])
