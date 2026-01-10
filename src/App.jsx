@@ -12,9 +12,20 @@ import Chatsection from './components/chatsection'
 import UserProfile from './pages/profilepage'
 import UserSettings from './pages/setting'
 import NewChatPage from './pages/newChatPage'
-import { ToastContainer } from 'react-toastify'
+import { toast, ToastContainer } from 'react-toastify'
+import { useEffect } from 'react'
 
 function App() {
+
+  useEffect(() => {
+    window.addEventListener("offline", () => {
+      toast.error("Your Net Connection Is Lost")
+    });
+
+    window.addEventListener("online", () => {
+      toast.success("Connected to Net")
+    })
+  }, [])
 
   return (
     <>
