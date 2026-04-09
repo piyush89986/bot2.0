@@ -29,7 +29,7 @@ export default function Chatsection() {
                 setMessages([])
             }
         } catch (error) {
-            toast.error(error.messages || "Server Error")
+            toast.error(error.message || "Server Error")
         }
     }, [chatId])
 
@@ -56,7 +56,7 @@ export default function Chatsection() {
     }, [chatId, newMsg]);
 
     const getStatusIcon = ({ seen, delivered }) => {
-        if (seen.length) {
+        if (seen?.length) {
             return <span className="text-xs">
                 <span className="text-blue-800 text-lg">✓✓</span>
             </span>;
@@ -88,10 +88,15 @@ export default function Chatsection() {
 
     // receive message from realtime
     useEffect(() => {
-        socket.on("newMessage", (messages) => {
-            setMessages(prev => [...prev, messages])
-        })
-    }, [])
+        const onNewMessage = (incomingMessage) => {
+            setMessages((prev) => [...prev, incomingMessage]);
+        };
+
+        socket.on("newMessage", onNewMessage);
+        return () => {
+            socket.off("newMessage", onNewMessage);
+        };
+    }, []);
 
 
     return (
@@ -128,11 +133,11 @@ export default function Chatsection() {
                 {messages.map((msg) => (
                     <div
                         key={msg._id}
-                        className={`flex mb-2 ${msg.sender._id === loggedUser._id ? "justify-end" : "justify-start"
+                        className={`flex mb-2 ${msg?.sender?._id === loggedUser._id ? "justify-end" : "justify-start"
                             }`}
                     >
                         <div
-                            className={`px-2 py-0 rounded max-w-lg ${msg.sender._id === loggedUser._id
+                            className={`px-2 py-0 rounded max-w-lg ${msg?.sender?._id === loggedUser._id
                                 ? "bg-green-400 text-white"
                                 : "bg-gray-200"
                                 }`}
@@ -140,7 +145,7 @@ export default function Chatsection() {
                             <p className="whitespace-pre-wrap break-words">
                                 {msg.message}
                                 <span className={`text-xs ml-3 text-right mt-1 opacity-80`}>
-                                    {msg.sender._id === loggedUser._id && getStatusIcon({ seen: msg.seen, delivered: msg.delivered })}
+                                    {msg?.sender?._id === loggedUser._id && getStatusIcon({ seen: msg.seen, delivered: msg.delivered })}
                                 </span>
                             </p>
                         </div>

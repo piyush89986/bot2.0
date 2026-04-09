@@ -6,6 +6,7 @@ import axios from "axios";
 export const axiosClient = axios.create({
     baseURL: import.meta.env.VITE_ENDPOINT_URL,
     timeout: 10000, // default timeout: 10 seconds
+    withCredentials: true,
 });
 
 /**
@@ -57,18 +58,19 @@ export default async function apiRequestHandler(
     headers = {},
     timeout,
 ) {
-    let token = window.localStorage.getItem("token")
+    const token = window.localStorage.getItem("token");
     try {
         const config = {
             method: method.toLowerCase(),
             url,
             params,
-            headers: {
-                ...headers,
-                "Authorization": `Bearer ${token}`
-            },
+            headers: { ...headers },
             timeout: timeout || 10000,
         };
+
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
 
         // Only attach data for methods that allow a request body
         if (!["get", "delete"].includes(method.toLowerCase())) {
@@ -81,7 +83,7 @@ export default async function apiRequestHandler(
     } catch (error) {
         return {
             success: false,
-            status: error.response?.success || 500,
+            status: error.response?.status || 500,
             message:
                 error.response?.data?.message ||
                 error.message ||
