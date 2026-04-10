@@ -9,28 +9,25 @@ import { toast } from 'react-toastify';
 import { getChatAccess } from '../webservices/chatApi/apis';
 
 export default function NewChatPage() {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
     const [open, setOpen] = useState(false);
-    const [searchResults, setSearchResults] = useState([])
+    const [searchResults, setSearchResults] = useState([]);
 
     const searchUser = useCallback(async (query) => {
         if (!query) return setSearchResults([]);
-
         try {
-            let response = await apiRequestHandler("get", endpointUrls.SEARCH_USERS, {}, { q: query })
-
+            let response = await apiRequestHandler("get", endpointUrls.SEARCH_USERS, {}, { q: query });
             if (response.success) {
-                setSearchResults(response.data)
+                setSearchResults(response.data);
             } else {
-                toast.error(response.message)
+                toast.error(response.message);
             }
         } catch (error) {
-            toast.error(error.message)
+            toast.error(error.message);
         }
     }, []);
 
     let debounceSearch = debounce(searchUser, 500);
-
 
     const getReciver = useCallback(async (id) => {
         try {
@@ -38,122 +35,96 @@ export default function NewChatPage() {
             if (response.success) {
                 let state = {
                     name: response.data.isGroupChat ? response.data.groupName : response.data.user_name,
-                    icon: response.data.isGroupChat ? response.data.groupIcon : response.data.avatar
-                }
+                    icon: response.data.isGroupChat ? response.data.groupIcon : response.data.avatar,
+                };
                 navigate(`/c/chat/${response.data._id}`, { state });
             } else {
-                toast.error(response.message)
+                toast.error(response.message);
             }
         } catch (error) {
-            toast.error(error.message || "Server Error")
+            toast.error(error.message || "Server Error");
         }
-    }, [navigate])
-
+    }, [navigate]);
 
     return (
-        <>
+        <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-400 bg-white">
-                <div className="flex items-center gap-5">
-                    <IoReturnUpBack className="text-2xl cursor-pointer" onClick={() => navigate("/c")} />
-                    <div>
-                        <h2 className="text-xl font-semibold">New Chats</h2>
-                    </div>
+            <div className="flex items-center justify-between px-4 py-3 sm:p-4 border-b border-gray-200 bg-white flex-shrink-0">
+                <div className="flex items-center gap-3">
+                    <button onClick={() => navigate("/c")} className="p-1.5 rounded-full hover:bg-gray-100 transition">
+                        <IoReturnUpBack className="text-xl text-gray-600" />
+                    </button>
+                    <h2 className="text-base sm:text-xl font-semibold">New Chats</h2>
                 </div>
                 <button
                     onClick={() => setOpen(true)}
-                    className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                    className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
                 >
                     + Create Group
                 </button>
             </div>
 
-            <div className="p-4 bg-gray-50 h-screen overflow-y-auto">
-
+            <div className="flex-1 p-3 sm:p-4 bg-gray-50 overflow-y-auto">
                 {/* Search bar */}
-                <div className='grid grid-cols-1 md:grid-cols-3 ml-1'>
-                    <div className="m-2 px-3 py-2 border border-gray-400 rounded flex items-center bg-gray-50">
-                        <FiSearch className="text-xl mr-2 text-gray-600" />
-                        <input
-                            type="text"
-                            placeholder="Search users..."
-                            className="w-full outline-none bg-transparent"
-                            onChange={(e) => debounceSearch(e.target.value)}
-                        />
-                    </div>
+                <div className="mb-3 px-3 py-2.5 border border-gray-200 rounded-xl flex items-center bg-white shadow-sm">
+                    <FiSearch className="text-lg mr-2 text-gray-400 flex-shrink-0" />
+                    <input
+                        type="text"
+                        placeholder="Search users..."
+                        className="w-full outline-none bg-transparent text-sm"
+                        onChange={(e) => debounceSearch(e.target.value)}
+                    />
                 </div>
 
-                {/* <!-- User List --> */}
-                <ul className="space-y-2 p-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {searchResults && searchResults.map((item) => (
-                        <li className="user" key={item._id}>
-                            <div onClick={() => getReciver(item._id)}
-                                className="flex items-center justify-between p-3 border border-gray-400 rounded hover:bg-indigo-50 cursor-pointer">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 bg-indigo-500 text-white rounded-full flex items-center justify-center capitalize">{(item.user_name)[0]}</div>
-                                    <span>{item.user_name}</span>
+                {/* User List */}
+                <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {searchResults.map((item) => (
+                        <li key={item._id}>
+                            <div
+                                onClick={() => getReciver(item._id)}
+                                className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 cursor-pointer transition shadow-sm"
+                            >
+                                <div className="w-9 h-9 bg-indigo-500 text-white rounded-full flex items-center justify-center capitalize font-medium flex-shrink-0">
+                                    {(item.user_name)[0]}
                                 </div>
-                                {/* <input type="checkbox" /> */}
+                                <span className="text-sm font-medium text-gray-800 truncate">{item.user_name}</span>
                             </div>
                         </li>
                     ))}
                 </ul>
 
-            </div >
+                {searchResults.length === 0 && (
+                    <div className="flex flex-col items-center justify-center mt-16 text-gray-400 gap-2">
+                        <FiSearch className="text-4xl" />
+                        <p className="text-sm">Search for users to start a chat</p>
+                    </div>
+                )}
+            </div>
 
-            {/* <!-- CREATE GROUP MODAL --> */}
-            {
-                open && <div id="groupModal" className="fixed inset-0 bg-black/40 flex justify-center items-center">
-
-                    <div className="bg-white w-full max-w-md rounded-lg p-5">
-                        <h3 className="text-lg font-semibold mb-3">Create Group</h3>
-
-                        <input
-                            type="text"
-                            placeholder="Group Name"
-                            className="w-full px-3 py-2 border rounded mb-3"
-                        />
-
-                        <p className="text-sm text-gray-500 mb-2">Select Members</p>
-
-                        {/* <!-- Select Users --> */}
-                        <ul className="space-y-2 mb-4">
-                            <li>
-                                <label className="flex items-center gap-3 p-2 border rounded cursor-pointer">
-                                    <input type="checkbox" />
-                                    Rahul Sharma
-                                </label>
-                            </li>
-                            <li>
-                                <label className="flex items-center gap-3 p-2 border rounded cursor-pointer">
-                                    <input type="checkbox" />
-                                    Priya Verma
-                                </label>
-                            </li>
-                            <li>
-                                <label className="flex items-center gap-3 p-2 border rounded cursor-pointer">
-                                    <input type="checkbox" />
-                                    Amit Patel
-                                </label>
-                            </li>
+            {/* Create Group Modal */}
+            {open && (
+                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 px-4">
+                    <div className="bg-white w-full max-w-md rounded-2xl p-5 shadow-2xl">
+                        <h3 className="text-lg font-semibold mb-4">Create Group</h3>
+                        <input type="text" placeholder="Group Name" className="w-full px-3 py-2.5 border border-gray-200 rounded-lg mb-4 text-sm outline-none focus:ring-2 focus:ring-indigo-300" />
+                        <p className="text-sm text-gray-500 mb-3">Select Members</p>
+                        <ul className="space-y-2 mb-5 max-h-48 overflow-y-auto">
+                            {["Rahul Sharma", "Priya Verma", "Amit Patel"].map((name) => (
+                                <li key={name}>
+                                    <label className="flex items-center gap-3 p-2.5 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+                                        <input type="checkbox" className="w-4 h-4 accent-indigo-600" />
+                                        {name}
+                                    </label>
+                                </li>
+                            ))}
                         </ul>
-
                         <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setOpen(false)}
-                                className="px-3 py-1 border rounded"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="px-3 py-1 bg-indigo-600 text-white rounded"
-                            >
-                                Create
-                            </button>
+                            <button onClick={() => setOpen(false)} className="px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition">Cancel</button>
+                            <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition">Create</button>
                         </div>
                     </div>
                 </div>
-            }
-        </>
-    )
+            )}
+        </div>
+    );
 }
