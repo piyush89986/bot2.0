@@ -10,7 +10,7 @@ import ProtectedRoute from "./routes/protected";
 import ChatPage from "./pages/chatpage";
 import Chatsection from "./components/chatsection";
 import UserProfile from "./pages/profilepage";
-import UserSettingsWithSounds from "./components/UserSettingsWithSounds"; // ✅ ADD YE
+import UserSettingsWithSounds from "./components/useSoundEffectsWithSettings"; // ✅ ADD YE
 import NewChatPage from "./pages/newChatPage";
 import { toast, ToastContainer } from "react-toastify";
 import { useEffect } from "react";
