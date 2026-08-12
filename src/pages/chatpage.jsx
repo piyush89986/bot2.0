@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FiMoreVertical, FiSearch, FiPlus, FiUser, FiSettings, FiLogOut, FiMessageSquare, FiMoon, FiSun } from "react-icons/fi";
+import { FiMoreVertical, FiSearch, FiPlus, FiUser, FiSettings, FiLogOut, FiMessageSquare, FiMoon, FiSun, FiInbox, FiClock } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { getMyChats } from "../webservices/chatApi/apis";
@@ -13,7 +13,8 @@ export default function ChatPage() {
   const [openMenu, setOpenMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [onlineUserIds, setOnlineUserIds] = useState([]);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true); // Default to Dark Theme
+  const [activeTab, setActiveTab] = useState("primary"); // 'primary' | 'requests'
   const menuRef = useRef(null);
 
   const { chats } = useSelector((store) => store.chatState);
@@ -67,10 +68,25 @@ export default function ChatPage() {
     fetchChats();
   }, [fetchChats]);
 
-  // Filter chats by name or last message
-  const filteredChats = (chats || []).filter((chat) => {
-    const user = chat.members?.find((item) => item._id !== loggedUser?._id);
-    const chatTitle = chat.isGroupChat ? chat.groupName : user?.user_name || "Chat";
+  // Separate Primary vs Request chats (Instagram style)
+  const pendingRequestChats = (chats || []).filter((chat) => {
+    return !chat.isGroupChat && chat.status === "pending" && chat.requestedBy !== loggedUser?._id;
+  });
+
+  const primaryChats = (chats || []).filter((chat) => {
+    if (chat.isGroupChat) return true;
+    if (chat.status === "accepted") return true;
+    // Sent pending requests by logged user are kept in primary list
+    if (chat.status === "pending" && chat.requestedBy === loggedUser?._id) return true;
+    return false;
+  });
+
+  const activeTabChats = activeTab === "requests" ? pendingRequestChats : primaryChats;
+
+  // Filter chats by search query
+  const filteredChats = activeTabChats.filter((chat) => {
+    const partner = chat.members?.find((item) => item._id !== loggedUser?._id);
+    const chatTitle = chat.isGroupChat ? chat.groupName : partner?.user_name || "Chat";
     return chatTitle.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
@@ -166,6 +182,35 @@ export default function ChatPage() {
           </div>
         </div>
 
+        {/* Tab Switcher: Primary vs Requests */}
+        <div className="flex border-b border-slate-100 dark:border-slate-800/80 px-2 pt-2 gap-2">
+          <button
+            onClick={() => setActiveTab("primary")}
+            className={`flex-1 py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 ${
+              activeTab === "primary"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            }`}
+          >
+            <FiInbox /> Primary
+          </button>
+          <button
+            onClick={() => setActiveTab("requests")}
+            className={`flex-1 py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 relative ${
+              activeTab === "requests"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            }`}
+          >
+            <FiClock /> Requests
+            {pendingRequestChats.length > 0 && (
+              <span className="px-1.5 py-0.5 text-[10px] font-extrabold bg-rose-500 text-white rounded-full">
+                {pendingRequestChats.length}
+              </span>
+            )}
+          </button>
+        </div>
+
         {/* Search bar */}
         <div className="p-3">
           <div className="px-3.5 py-2 border border-slate-200/70 dark:border-slate-700/60 rounded-xl flex items-center bg-slate-50 dark:bg-slate-800/60 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:bg-white dark:focus-within:bg-slate-800 transition">
@@ -185,10 +230,14 @@ export default function ChatPage() {
           {filteredChats.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-center text-slate-400">
               <FiMessageSquare className="text-3xl mb-2 stroke-1 opacity-50" />
-              <p className="text-xs font-medium">No conversations found</p>
-              <Link to="/c/new-chat" className="mt-3 text-xs font-semibold text-indigo-600 hover:underline">
-                Start a new chat
-              </Link>
+              <p className="text-xs font-medium">
+                {activeTab === "requests" ? "No pending message requests" : "No conversations found"}
+              </p>
+              {activeTab === "primary" && (
+                <Link to="/c/new-chat" className="mt-3 text-xs font-semibold text-indigo-600 hover:underline">
+                  Start a new chat
+                </Link>
+              )}
             </div>
           ) : (
             filteredChats.map((chat) => {
@@ -199,14 +248,14 @@ export default function ChatPage() {
                 ? chat.groupIcon || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(chatTitle)}`
                 : partner?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(chatTitle)}`;
               
-              const lastMessageText = chat?.lastMessage?.message || "Click to start chatting";
+              const lastMessageText = chat?.lastMessage?.message || (chat.status === "pending" ? "Wants to send a message..." : "Click to start chatting");
               const unreadCount = chat?.unreadCounts?.length || 0;
 
               return (
                 <NavLink
                   to={`/c/chat/${chat._id}`}
                   key={chat._id}
-                  state={{ name: chatTitle, icon: chatIcon, online: isOnline, partnerId: partner?._id }}
+                  state={{ name: chatTitle, icon: chatIcon, online: isOnline, partnerId: partner?._id, chatStatus: chat.status, requestedBy: chat.requestedBy }}
                   className={({ isActive }) =>
                     `flex items-center p-3 rounded-2xl cursor-pointer transition-all duration-200 ${
                       isActive
@@ -266,7 +315,7 @@ export default function ChatPage() {
 
       {/* Main Chat / Outlet Area */}
       <div className={`flex-1 flex flex-col min-w-0 ${isOnChat ? "flex" : "hidden md:flex"}`}>
-        <Outlet context={{ darkMode }} />
+        <Outlet context={{ darkMode, refreshChats: fetchChats }} />
       </div>
 
       {/* Empty State when no chat is selected */}
@@ -292,4 +341,5 @@ export default function ChatPage() {
     </div>
   );
 }
+
 

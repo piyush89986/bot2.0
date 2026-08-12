@@ -4,8 +4,8 @@ import axios from "axios";
  * Axios client instance with a base URL and default timeout.
  */
 export const axiosClient = axios.create({
-    baseURL: import.meta.env.VITE_ENDPOINT_URL,
-    timeout: 10000, // default timeout: 10 seconds
+    baseURL: import.meta.env.VITE_ENDPOINT_URL || "https://chatapplication-backend-ddk8.onrender.com",
+    timeout: 15000, // 15 seconds for production cold starts
     withCredentials: true,
 });
 

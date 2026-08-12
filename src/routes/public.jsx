@@ -9,12 +9,12 @@ export default function PublicRoute() {
     }
 
     return (
-        <>
-            <div className="flex flex-col min-h-screen bg-gray-50 text-gray-800">
-                <Header />
+        <div className="dark flex flex-col min-h-screen bg-slate-950 text-slate-100 transition-colors duration-200">
+            <Header />
+            <div className="flex-1">
                 <Outlet />
-                <Footer />
             </div>
-        </>
+            <Footer />
+        </div>
     )
 }

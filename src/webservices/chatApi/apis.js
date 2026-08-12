@@ -27,3 +27,13 @@ export async function createGroupChatApi(data) {
     let response = await apiRequestHandler("post", endpointUrls.CREATE_GROUP_CHAT, data);
     return response;
 }
+
+export async function acceptChatRequestApi(chatId) {
+    let response = await apiRequestHandler("patch", endpointUrls.ACCEPT_CHAT_REQUEST + chatId);
+    return response;
+}
+
+export async function declineChatRequestApi(chatId) {
+    let response = await apiRequestHandler("delete", endpointUrls.DECLINE_CHAT_REQUEST + chatId);
+    return response;
+}

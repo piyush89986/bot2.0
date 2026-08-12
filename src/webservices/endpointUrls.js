@@ -10,5 +10,7 @@ export default {
     GET_CHAT_MESSAGES: "/chat/m/", // chat id
     GET_CHAT_ACCESS  : "/chat/access",
     SEND_MESSAGE  : "/chat/send-message",
-    CREATE_GROUP_CHAT: "/chat/group"
+    CREATE_GROUP_CHAT: "/chat/group",
+    ACCEPT_CHAT_REQUEST: "/chat/accept/",
+    DECLINE_CHAT_REQUEST: "/chat/decline/"
 }
