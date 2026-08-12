@@ -70,15 +70,16 @@ export default function ChatPage() {
 
   // Separate Primary vs Request chats (Instagram style)
   const pendingRequestChats = (chats || []).filter((chat) => {
-    return !chat.isGroupChat && chat.status === "pending" && chat.requestedBy !== loggedUser?._id;
+    const isPending = chat.status === "pending";
+    const requestedById = chat.requestedBy?._id || chat.requestedBy;
+    return !chat.isGroupChat && isPending && requestedById && requestedById !== loggedUser?._id;
   });
 
   const primaryChats = (chats || []).filter((chat) => {
-    if (chat.isGroupChat) return true;
-    if (chat.status === "accepted") return true;
-    // Sent pending requests by logged user are kept in primary list
-    if (chat.status === "pending" && chat.requestedBy === loggedUser?._id) return true;
-    return false;
+    const isPending = chat.status === "pending";
+    const requestedById = chat.requestedBy?._id || chat.requestedBy;
+    const isIncomingPending = !chat.isGroupChat && isPending && requestedById && requestedById !== loggedUser?._id;
+    return !isIncomingPending;
   });
 
   const activeTabChats = activeTab === "requests" ? pendingRequestChats : primaryChats;
