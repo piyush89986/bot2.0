@@ -20,5 +20,10 @@ export async function getChatAccess(id) {
 
 export async function sendMessageApi(data) {
     let response = await apiRequestHandler("post", endpointUrls.SEND_MESSAGE, data);
-    return response
+    return response;
 } 
+
+export async function createGroupChatApi(data) {
+    let response = await apiRequestHandler("post", endpointUrls.CREATE_GROUP_CHAT, data);
+    return response;
+}

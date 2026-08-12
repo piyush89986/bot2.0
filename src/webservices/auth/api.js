@@ -14,7 +14,7 @@ export async function updateUser(data) {
 
 
 export async function uploadProfile(data) {
-    let response = await apiRequestHandler("patch", endpointUrls.UPLOAD_USER_PROFILE, data, {
+    let response = await apiRequestHandler("patch", endpointUrls.UPLOAD_USER_PROFILE, data, {}, {
         "Content-Type": "multipart/form-data"
     });
     return response;
