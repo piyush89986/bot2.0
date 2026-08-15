@@ -10,7 +10,7 @@ export default function UserProfile() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const outletContext = useOutletContext();
-    const darkMode = outletContext?.darkMode || false;
+    const darkMode = outletContext?.darkMode ?? true;
 
     const { loggedUser } = useSelector((store) => store.user);
     const fileRef = useRef(null);

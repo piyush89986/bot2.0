@@ -1,21 +1,25 @@
 import { useState, useEffect } from "react";
 import { IoReturnUpBack } from "react-icons/io5";
-import { useNavigate } from "react-router";
+import { useNavigate, useOutletContext } from "react-router";
 import { useSoundEffectsWithSettings } from "../utils/useSoundEffects";
+import { toast } from "react-toastify";
 
 export default function UserSettings() {
   const navigate = useNavigate();
+  const outletContext = useOutletContext();
+  const darkMode = outletContext?.darkMode ?? true;
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
   const [notifications, setNotifications] = useState({
     messages: true,
     mentions: true,
-    sounds: false,
+    sounds: true,
   });
   const [privacy, setPrivacy] = useState({
     showStatus: true,
@@ -23,7 +27,7 @@ export default function UserSettings() {
     lastSeen: "Everyone",
   });
 
-  // Sound effects hook - sounds enable/disable hotengi notifications.sounds ke based par
+  // Sound effects hook
   const { playMessageSend, playMessageReceive, playNotification } =
     useSoundEffectsWithSettings(notifications.sounds);
 
@@ -33,12 +37,12 @@ export default function UserSettings() {
       const savedSettings = localStorage.getItem("userSettings");
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
-        setTheme(parsed.theme || "light");
+        setTheme(parsed.theme || "dark");
         setNotifications(
           parsed.notifications || {
             messages: true,
             mentions: true,
-            sounds: false,
+            sounds: true,
           },
         );
         setPrivacy(
@@ -50,7 +54,7 @@ export default function UserSettings() {
         );
       }
 
-      applyTheme(localStorage.getItem("theme") || "light");
+      applyTheme(localStorage.getItem("theme") || "dark");
     } catch (error) {
       console.error("Error loading settings:", error);
       setErrorMessage("Failed to load your settings");
@@ -59,7 +63,6 @@ export default function UserSettings() {
     }
   }, []);
 
-  // Play test sound jab sound toggle ho
   const handleSoundToggle = (e) => {
     const newSoundsState = e.target.checked;
     setNotifications({
@@ -67,7 +70,6 @@ export default function UserSettings() {
       sounds: newSoundsState,
     });
 
-    // Test sound play karo jab enable karo
     if (newSoundsState) {
       playNotification();
     }
@@ -102,7 +104,7 @@ export default function UserSettings() {
     setSuccessMessage("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       const settingsToSave = {
         theme,
@@ -114,15 +116,18 @@ export default function UserSettings() {
       localStorage.setItem("userSettings", JSON.stringify(settingsToSave));
       localStorage.setItem("theme", theme);
 
-      // Play success notification sound
+      applyTheme(theme);
+
       if (notifications.sounds) {
         playNotification();
       }
 
+      toast.success("Settings saved successfully! ✓");
       setSuccessMessage("Settings saved successfully! ✓");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      setTimeout(() => setSuccessMessage(""), 4000);
     } catch (error) {
       console.error("Error saving settings:", error);
+      toast.error("Failed to save settings. Please try again.");
       setErrorMessage("Failed to save settings. Please try again.");
     } finally {
       setSaving(false);
@@ -139,7 +144,7 @@ export default function UserSettings() {
     setErrorMessage("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       localStorage.clear();
       sessionStorage.clear();
@@ -158,52 +163,61 @@ export default function UserSettings() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className={`flex items-center justify-center h-full ${darkMode ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading settings...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+          <p className="text-slate-400 text-sm">Loading settings...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className={`flex flex-col h-full ${darkMode ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
       {/* Header */}
-      <div className="flex items-center gap-4 px-4 py-3 sm:p-5 border-b border-gray-200 bg-white flex-shrink-0 shadow-sm">
+      <div className={`flex items-center gap-4 px-4 py-3.5 sm:p-5 border-b flex-shrink-0 shadow-md ${
+        darkMode ? "bg-slate-900 border-slate-800/80" : "bg-white border-slate-200"
+      }`}>
         <button
           onClick={() => navigate("/c")}
-          className="p-1.5 rounded-full hover:bg-gray-100 transition"
+          className={`p-2 rounded-xl transition ${
+            darkMode ? "hover:bg-slate-800 text-slate-300 hover:text-white" : "hover:bg-slate-100 text-slate-600"
+          }`}
           title="Go back"
         >
-          <IoReturnUpBack className="text-xl text-gray-600" />
+          <IoReturnUpBack className="text-xl" />
         </button>
-        <h2 className="font-semibold text-base sm:text-lg">Settings</h2>
+        <div>
+          <h2 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100">Settings</h2>
+          <p className="text-[11px] text-slate-400">Preferences, notifications and theme</p>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6">
+      <div className={`flex-1 overflow-y-auto p-4 sm:p-6 ${darkMode ? "bg-slate-950" : "bg-slate-50"}`}>
         <div className="max-w-lg mx-auto">
           {errorMessage && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-4 p-3 bg-rose-950/80 border border-rose-800 rounded-xl text-rose-300 text-xs">
               {errorMessage}
             </div>
           )}
 
           {successMessage && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+            <div className="mb-4 p-3 bg-emerald-950/80 border border-emerald-800 rounded-xl text-emerald-300 text-xs font-semibold">
               {successMessage}
             </div>
           )}
 
-          <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm space-y-7">
+          <div className={`rounded-2xl p-5 sm:p-6 shadow-xl space-y-7 border ${
+            darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
+          }`}>
             {/* Notifications Section */}
             <section>
-              <h3 className="text-base font-semibold text-gray-800 mb-3">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-3">
                 Notifications
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-slate-700 dark:text-slate-300">
                     Message notifications
                   </span>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -218,12 +232,12 @@ export default function UserSettings() {
                       }
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
+                    <div className="w-10 h-5 bg-slate-300 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 dark:after:border-slate-600 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
 
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-slate-700 dark:text-slate-300">
                     Mention notifications
                   </span>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -238,16 +252,16 @@ export default function UserSettings() {
                       }
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
+                    <div className="w-10 h-5 bg-slate-300 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 dark:after:border-slate-600 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
 
                 <div className="flex justify-between items-center py-1">
                   <div className="flex-1">
-                    <span className="text-sm text-gray-700 block">
+                    <span className="text-sm text-slate-700 dark:text-slate-300 block">
                       Sound effects
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-slate-400">
                       Play sound when sending/receiving messages
                     </span>
                   </div>
@@ -258,31 +272,31 @@ export default function UserSettings() {
                       onChange={handleSoundToggle}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
+                    <div className="w-10 h-5 bg-slate-300 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 dark:after:border-slate-600 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
 
                 {notifications.sounds && (
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-xs text-blue-700 font-medium mb-2">
-                      Test Sounds
+                  <div className="mt-4 p-3 bg-indigo-950/60 border border-indigo-800/60 rounded-xl">
+                    <p className="text-xs text-indigo-300 font-semibold mb-2">
+                      Test Sound Effects
                     </p>
                     <div className="grid grid-cols-3 gap-2">
                       <button
                         onClick={playMessageSend}
-                        className="px-2 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                        className="px-2 py-1.5 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition font-medium"
                       >
                         📤 Send
                       </button>
                       <button
                         onClick={playMessageReceive}
-                        className="px-2 py-1.5 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition"
+                        className="px-2 py-1.5 text-xs bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition font-medium"
                       >
                         📥 Receive
                       </button>
                       <button
                         onClick={playNotification}
-                        className="px-2 py-1.5 text-xs bg-purple-500 text-white rounded hover:bg-purple-600 transition"
+                        className="px-2 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition font-medium"
                       >
                         🔔 Notify
                       </button>
@@ -292,11 +306,11 @@ export default function UserSettings() {
               </div>
             </section>
 
-            <hr className="border-gray-100" />
+            <hr className="border-slate-200 dark:border-slate-800" />
 
             {/* Privacy Section */}
             <section>
-              <h3 className="text-base font-semibold text-gray-800 mb-3">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-3">
                 Privacy
               </h3>
               <div className="space-y-3">
@@ -308,7 +322,7 @@ export default function UserSettings() {
                     key={key}
                     className="flex justify-between items-center py-1"
                   >
-                    <span className="text-sm text-gray-700">{label}</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">{label}</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
@@ -321,12 +335,12 @@ export default function UserSettings() {
                         }
                         className="sr-only peer"
                       />
-                      <div className="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
+                      <div className="w-10 h-5 bg-slate-300 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 dark:after:border-slate-600 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                     </label>
                   </div>
                 ))}
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1.5">
+                  <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1.5">
                     Last seen visibility
                   </label>
                   <select
@@ -337,49 +351,49 @@ export default function UserSettings() {
                         lastSeen: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                   >
-                    <option>Everyone</option>
-                    <option>My contacts</option>
-                    <option>Nobody</option>
+                    <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">Everyone</option>
+                    <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">My contacts</option>
+                    <option className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">Nobody</option>
                   </select>
                 </div>
               </div>
             </section>
 
-            <hr className="border-gray-100" />
+            <hr className="border-slate-200 dark:border-slate-800" />
 
             {/* Appearance Section */}
             <section>
-              <h3 className="text-base font-semibold text-gray-800 mb-3">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-3">
                 Appearance
               </h3>
               <div>
-                <label className="block text-sm text-gray-700 mb-1.5">
+                <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1.5">
                   Theme
                 </label>
                 <select
                   value={theme}
                   onChange={(e) => handleThemeChange(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                 >
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                  <option value="system">System</option>
+                  <option value="dark" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">Dark (Recommended)</option>
+                  <option value="light" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">Light</option>
+                  <option value="system" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">System</option>
                 </select>
               </div>
             </section>
 
-            <hr className="border-gray-100" />
+            <hr className="border-slate-200 dark:border-slate-800" />
 
             {/* Danger Zone */}
             <section>
-              <h3 className="text-base font-semibold text-red-500 mb-3">
+              <h3 className="text-base font-semibold text-rose-500 mb-3">
                 Danger Zone
               </h3>
               {deleteConfirm ? (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-sm text-red-800 font-medium mb-4">
+                <div className="bg-rose-950/60 border border-rose-800/80 rounded-xl p-4">
+                  <p className="text-xs text-rose-200 font-medium mb-4">
                     Are you sure? This action cannot be undone. Your account and
                     all data will be permanently deleted.
                   </p>
@@ -387,14 +401,14 @@ export default function UserSettings() {
                     <button
                       onClick={handleDeleteAccount}
                       disabled={saving}
-                      className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition disabled:opacity-50"
+                      className="flex-1 px-3 py-2 bg-rose-600 text-white rounded-xl text-xs font-semibold hover:bg-rose-700 transition disabled:opacity-50"
                     >
                       {saving ? "Deleting..." : "Yes, Delete My Account"}
                     </button>
                     <button
                       onClick={cancelDelete}
                       disabled={saving}
-                      className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition disabled:opacity-50"
+                      className="flex-1 px-3 py-2 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-800 transition disabled:opacity-50"
                     >
                       Cancel
                     </button>
@@ -403,16 +417,16 @@ export default function UserSettings() {
               ) : (
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-gray-700 font-medium">
+                    <p className="text-sm text-slate-700 dark:text-slate-200 font-medium">
                       Delete account
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-slate-400">
                       This action cannot be undone
                     </p>
                   </div>
                   <button
                     onClick={handleDeleteAccount}
-                    className="px-3 py-1.5 cursor-pointer rounded-lg border border-red-300 text-red-600 text-sm hover:bg-red-50 transition"
+                    className="px-3 py-1.5 cursor-pointer rounded-xl border border-rose-800/80 text-rose-400 text-xs font-semibold hover:bg-rose-950/40 transition"
                   >
                     Delete
                   </button>
@@ -424,9 +438,9 @@ export default function UserSettings() {
             <button
               onClick={handleSaveChanges}
               disabled={saving}
-              className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving ? "Saving..." : "Save Changes"}
+              {saving ? "Saving Changes..." : "Save Changes"}
             </button>
           </div>
         </div>

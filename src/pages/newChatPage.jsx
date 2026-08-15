@@ -10,7 +10,7 @@ import { getChatAccess, createGroupChatApi } from '../webservices/chatApi/apis';
 export default function NewChatPage() {
     const navigate = useNavigate();
     const outletContext = useOutletContext();
-    const darkMode = outletContext?.darkMode || false;
+    const darkMode = outletContext?.darkMode ?? true;
 
     const [openGroupModal, setOpenGroupModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
