@@ -477,9 +477,9 @@ export default function Chatsection() {
     };
 
     return (
-        <div className={`flex flex-col h-full relative ${darkMode ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
+        <div className={`flex flex-col h-full max-h-full min-h-0 overflow-hidden relative ${darkMode ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
             {/* Header */}
-            <div className={`flex items-center justify-between px-4 py-3 border-b shadow-sm z-20 transition-colors ${
+            <div className={`flex items-center justify-between px-4 py-3 border-b shadow-sm z-20 transition-colors flex-shrink-0 ${
                 darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200/80"
             }`}>
                 <div className="flex items-center gap-3 min-w-0">
@@ -537,7 +537,7 @@ export default function Chatsection() {
 
             {/* In-Chat Search Bar Drawer */}
             {searchOpen && (
-                <div className={`p-2.5 border-b flex items-center gap-2 animate-in slide-in-from-top duration-200 ${
+                <div className={`p-2.5 border-b flex items-center gap-2 flex-shrink-0 animate-in slide-in-from-top duration-200 ${
                     darkMode ? "bg-slate-900 border-slate-800" : "bg-indigo-50/50 border-indigo-100"
                 }`}>
                     <FiSearch className="text-slate-400 ml-2" />
@@ -557,7 +557,7 @@ export default function Chatsection() {
             )}
 
             {/* Messages Scroll Area */}
-            <div className={`flex-1 p-4 overflow-y-auto space-y-3 ${
+            <div className={`flex-1 min-h-0 p-4 overflow-y-auto space-y-3 ${
                 darkMode ? "bg-slate-950" : "bg-gradient-to-b from-slate-50 to-indigo-50/20"
             }`}>
                 {displayedMessages.length === 0 ? (
@@ -630,7 +630,7 @@ export default function Chatsection() {
 
             {/* Instagram-Style Message Request Bottom Overlay Banner */}
             {isPendingForMe && (
-                <div className="p-4 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left z-30 shadow-2xl animate-in slide-in-from-bottom duration-200">
+                <div className="p-4 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left z-30 shadow-2xl flex-shrink-0 animate-in slide-in-from-bottom duration-200">
                     <div>
                         <h4 className="text-xs font-bold text-slate-100 flex items-center justify-center sm:justify-start gap-1.5">
                             📩 Message Request from {chatTitle}
@@ -658,7 +658,7 @@ export default function Chatsection() {
 
             {/* Attachment Preview Modal */}
             {attachment && (
-                <div className={`px-4 py-2 border-t flex items-center justify-between ${darkMode ? "bg-slate-900 border-slate-800" : "bg-indigo-50 border-indigo-100"}`}>
+                <div className={`px-4 py-2 border-t flex items-center justify-between flex-shrink-0 ${darkMode ? "bg-slate-900 border-slate-800" : "bg-indigo-50 border-indigo-100"}`}>
                     <div className="flex items-center gap-3">
                         {attachment.isPdf ? (
                             <FiFileText className="text-2xl text-rose-500" />
@@ -680,7 +680,7 @@ export default function Chatsection() {
 
             {/* Voice Recording Active Bar */}
             {isRecording && (
-                <div className="px-4 py-2.5 bg-rose-950/80 border-t border-rose-900/60 flex items-center justify-between text-rose-200 animate-pulse">
+                <div className="px-4 py-2.5 bg-rose-950/80 border-t border-rose-900/60 flex items-center justify-between text-rose-200 flex-shrink-0 animate-pulse">
                     <div className="flex items-center gap-2 text-xs font-bold">
                         <span className="w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping" />
                         Recording Voice Note: {formatTime(recordingTime)}
@@ -709,7 +709,7 @@ export default function Chatsection() {
             )}
 
             {/* Input Bar */}
-            <div className={`p-3 border-t flex items-center gap-2 z-20 ${darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200/80"}`}>
+            <div className={`p-3 border-t flex items-center gap-2 z-20 flex-shrink-0 ${darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200/80"}`}>
                 <button
                     type="button"
                     disabled={isPendingForMe}

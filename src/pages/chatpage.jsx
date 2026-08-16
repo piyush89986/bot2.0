@@ -92,13 +92,13 @@ export default function ChatPage() {
   });
 
   return (
-    <div className={`flex h-screen overflow-hidden ${darkMode ? "dark bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
+    <div className={`flex h-screen h-[100dvh] max-h-[100dvh] overflow-hidden ${darkMode ? "dark bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
       {/* Sidebar — hidden on mobile when viewing a chat */}
       <div
         className={`
           ${isOnChat ? "hidden md:flex" : "flex"}
           w-full md:w-80 lg:w-96 border-r border-slate-200/80 dark:border-slate-800 ${darkMode ? "bg-slate-900" : "bg-white"} flex-col
-          min-w-0 flex-shrink-0 shadow-sm z-10 transition-colors duration-200
+          min-w-0 min-h-0 flex-shrink-0 shadow-sm z-10 transition-colors duration-200 h-full max-h-full
         `}
       >
         {/* Header */}
@@ -315,7 +315,7 @@ export default function ChatPage() {
       </div>
 
       {/* Main Chat / Outlet Area */}
-      <div className={`flex-1 flex flex-col min-w-0 ${isOnChat ? "flex" : "hidden md:flex"}`}>
+      <div className={`flex-1 flex flex-col min-w-0 min-h-0 h-full max-h-full overflow-hidden ${isOnChat ? "flex" : "hidden md:flex"}`}>
         <Outlet context={{ darkMode, refreshChats: fetchChats }} />
       </div>
 

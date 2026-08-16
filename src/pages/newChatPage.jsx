@@ -142,7 +142,7 @@ export default function NewChatPage() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 p-4 overflow-y-auto max-w-4xl mx-auto w-full space-y-4">
+            <div className="flex-1 min-h-0 p-4 overflow-y-auto max-w-4xl mx-auto w-full space-y-4">
                 {/* Search Bar */}
                 <div className={`p-3 border rounded-2xl flex items-center shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 transition ${
                     darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
