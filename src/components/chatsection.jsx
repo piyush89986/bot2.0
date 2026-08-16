@@ -52,6 +52,8 @@ export default function Chatsection() {
     const [lightboxImage, setLightboxImage] = useState(null);
     const [playingAudioId, setPlayingAudioId] = useState(null);
     const typingTimeoutRef = useRef(null);
+    const sendingRef = useRef(false);
+    const [isSending, setIsSending] = useState(false);
 
     const isPendingForMe = chatStatus === "pending" && requestedBy && requestedBy !== loggedUser?._id;
 
@@ -102,6 +104,8 @@ export default function Chatsection() {
 
     // Handle sending message (text, image, pdf, voice note)
     const handleSend = useCallback(async (customPayload = null) => {
+        if (sendingRef.current) return; // Block duplicate/multiple quick clicks
+
         if (isPendingForMe) {
             toast.warning("Please accept the message request first to send messages.");
             return;
@@ -134,6 +138,8 @@ export default function Chatsection() {
         };
 
         try {
+            sendingRef.current = true;
+            setIsSending(true);
             let response = await sendMessageApi(data);
             if (response.success) {
                 setNewMsg("");
@@ -145,6 +151,9 @@ export default function Chatsection() {
             }
         } catch (error) {
             toast.error(error.message || "Server Error");
+        } finally {
+            sendingRef.current = false;
+            setIsSending(false);
         }
     }, [chatId, newMsg, attachment, loggedUser._id, isPendingForMe]);
 
@@ -729,24 +738,30 @@ export default function Chatsection() {
 
                 <input
                     type="text"
-                    disabled={isPendingForMe}
+                    disabled={isPendingForMe || isSending}
                     placeholder={isPendingForMe ? "Accept message request to reply..." : "Type a message..."}
                     value={newMsg}
                     onChange={handleInputChange}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !isSending) {
+                            e.preventDefault();
+                            handleSend();
+                        }
+                    }}
                     className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl outline-none text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/20 transition disabled:opacity-50"
                 />
 
                 <button
+                    type="button"
                     onClick={() => handleSend()}
-                    disabled={isPendingForMe || (!newMsg.trim() && !attachment)}
+                    disabled={isPendingForMe || isSending || (!newMsg.trim() && !attachment)}
                     className={`p-3 rounded-2xl text-white shadow-lg transition-all duration-200 ${
-                        !isPendingForMe && (newMsg.trim() || attachment)
+                        !isPendingForMe && !isSending && (newMsg.trim() || attachment)
                             ? "bg-gradient-to-r from-indigo-600 to-purple-600 shadow-indigo-500/25 hover:scale-105 active:scale-95"
-                            : "bg-slate-300 dark:bg-slate-800 cursor-not-allowed text-slate-500"
+                            : "bg-slate-300 dark:bg-slate-800 cursor-not-allowed text-slate-500 opacity-60"
                     }`}
                 >
-                    <FiSend className="text-base" />
+                    <FiSend className={`text-base ${isSending ? "animate-pulse" : ""}`} />
                 </button>
             </div>
 

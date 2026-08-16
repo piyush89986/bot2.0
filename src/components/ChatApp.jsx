@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSoundEffectsWithSettings } from "../utils/useSoundEffects";
 
 /**
@@ -32,13 +32,17 @@ export function ChatMessage({ message, currentUserId, soundsEnabled }) {
  */
 export function ChatContainer({ messages, currentUserId, soundsEnabled }) {
     const [inputMessage, setInputMessage] = useState("");
+    const [isSending, setIsSending] = useState(false);
+    const sendingRef = useRef(false);
     const { playMessageSend, playMessageReceive } = useSoundEffectsWithSettings(soundsEnabled);
 
     // Send message function
     const handleSendMessage = async () => {
-        if (!inputMessage.trim()) return;
+        if (sendingRef.current || !inputMessage.trim()) return;
 
         try {
+            sendingRef.current = true;
+            setIsSending(true);
             // Play send sound
             if (soundsEnabled) {
                 playMessageSend();
@@ -61,6 +65,9 @@ export function ChatContainer({ messages, currentUserId, soundsEnabled }) {
             }
         } catch (error) {
             console.error("Error sending message:", error);
+        } finally {
+            sendingRef.current = false;
+            setIsSending(false);
         }
     };
 
@@ -83,15 +90,17 @@ export function ChatContainer({ messages, currentUserId, soundsEnabled }) {
                 <div className="flex gap-2">
                     <input
                         type="text"
+                        disabled={isSending}
                         value={inputMessage}
                         onChange={(e) => setInputMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                        onKeyPress={(e) => e.key === "Enter" && !isSending && handleSendMessage()}
                         placeholder="Type a message..."
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                     <button
                         onClick={handleSendMessage}
-                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                        disabled={isSending || !inputMessage.trim()}
+                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
                     >
                         Send
                     </button>
