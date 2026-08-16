@@ -39,8 +39,8 @@ function Contact() {
             {/* Contact Info Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 {[
-                    { icon: "📧", title: "Email Us", detail: "support@chatsphere.com" },
-                    { icon: "📞", title: "Call Us", detail: "+91 98765 43210" },
+                    { icon: "📧", title: "Email Us", detail: "piyushsinghtomar777@gmail.com" },
+                    { icon: "📞", title: "Call Us", detail: "+91 78048-*****" },
                     { icon: "📍", title: "Location", detail: "India" },
                 ].map((item, i) => (
                     <div key={i} className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 text-center space-y-2">
